@@ -1,0 +1,154 @@
+﻿<Page
+    x:Class="Ibuki.ImageViewerPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Ibuki"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:converters="using:Ibuki.Classes.Converters"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary x:Name="BooruStyle" Source="BooruStyle.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <MenuFlyout x:Key="TagButtonFlyout" Placement="LeftEdgeAlignedTop">
+                <MenuFlyoutItem Text="Copy" />
+                <MenuFlyoutItem Text="Add to search" />
+                <MenuFlyoutItem Text="Search this" />
+            </MenuFlyout>
+
+            <!--    Copyright tag button template    -->
+            <DataTemplate x:Key="CopyrightTagsList" x:DataType="local:Tag">
+                <Button Content="{x:Bind tag_display}" Tag="{x:Bind tag_name}" Style="{StaticResource CopyrightTagButton}" ContextFlyout="{StaticResource TagButtonFlyout}"/>
+            </DataTemplate>
+
+            <!--    Character tag button template    -->
+            <DataTemplate x:Key="CharacterTagsList" x:DataType="local:Tag">
+                <Button Content="{x:Bind tag_display}" Tag="{x:Bind tag_name}" Style="{StaticResource CharacterTagButton}" ContextFlyout="{StaticResource TagButtonFlyout}"/>
+            </DataTemplate>
+
+            <!--    Artist tag button template    -->
+            <DataTemplate x:Key="ArtistTagsList" x:DataType="local:Tag">
+                <Button Content="{x:Bind tag_display}" Tag="{x:Bind tag_name}" Style="{StaticResource ArtistTagButton}" ContextFlyout="{StaticResource TagButtonFlyout}"/>
+            </DataTemplate>
+
+            <!--    General tag button template    -->
+            <DataTemplate x:Key="GeneralTagsList" x:DataType="local:Tag">
+                <Button Content="{x:Bind tag_display}" Tag="{x:Bind tag_name}" Style="{StaticResource GeneralTagButton}" ContextFlyout="{StaticResource TagButtonFlyout}"/>
+            </DataTemplate>
+
+            <!--    Meta tag button template    -->
+            <DataTemplate x:Key="MetaTagsList" x:DataType="local:Tag">
+                <Button Content="{x:Bind tag_display}" Tag="{x:Bind tag_name}" Style="{StaticResource MetaTagButton}" ContextFlyout="{StaticResource TagButtonFlyout}"/>
+            </DataTemplate>
+
+            <converters:BooleanNegationConverter x:Name="BooleanNegationConverter"/>
+            <converters:BooleanToVisibilityConverter x:Name="BooleanToVisibilityConverter"/>
+
+            <converters:ValueConverterGroup x:Name="NegateBoolVisibilityConverter">
+                <converters:BooleanNegationConverter />
+                <converters:BooleanToVisibilityConverter />
+            </converters:ValueConverterGroup>
+            
+        </ResourceDictionary>
+    </Page.Resources>
+    
+    <Grid>
+        <SplitView x:Name="ImageViewerSplitView" PanePlacement="Right" IsPaneOpen="True" ScrollViewer.VerticalScrollBarVisibility="Auto" DisplayMode="Inline" OpenPaneLength="384">
+            <SplitView.PaneBackground>
+                <AcrylicBrush TintColor="#CC000000" FallbackColor="Black" TintOpacity="0.5"/>
+            </SplitView.PaneBackground>
+            <SplitView.Content>
+                <Grid x:Name="ImageViewerContent">
+                    <ToggleButton Canvas.ZIndex="50" VerticalAlignment="Top" HorizontalAlignment="Right" Height="48" Width="48" IsChecked="{Binding Mode=TwoWay, ElementName=HidePaneButton, Path=IsChecked}" 
+                                  Visibility="{Binding Mode=OneWay, ElementName=HidePaneButton, Path=IsChecked, Converter={StaticResource NegateBoolVisibilityConverter}}">
+                        <ToggleButton.Content>
+                            <SymbolIcon Symbol="ClosePane" />
+                        </ToggleButton.Content>
+                    </ToggleButton>
+                    <Image x:Name="Placeholder" Margin="32" VerticalAlignment="Center" HorizontalAlignment="Center" Width="Auto" Stretch="Uniform" Canvas.ZIndex="0"/>
+                    <ScrollViewer x:Name="ZoomView" VerticalAlignment="Stretch" Canvas.ZIndex="10" ZoomMode="Enabled" HorizontalScrollMode="Enabled" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" MinZoomFactor="1" SizeChanged="ZoomView_SizeChanged" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Visibility="{Binding ElementName=BigImage, Path=Visibility, Mode=OneWay}">
+                        <Image x:Name="BigImage" Margin="16" VerticalAlignment="Center" HorizontalAlignment="Center" Width="Auto" Stretch="Uniform" Canvas.ZIndex="2" ImageOpened="BigImage_ImageOpened" />
+                    </ScrollViewer>
+                    <muxc:ProgressRing Canvas.ZIndex="1" Height="50" Width="50" IsActive="True"/>
+                </Grid>
+            </SplitView.Content>
+            <SplitView.Pane>
+                <Grid x:Name="ImageViewerPane" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                    <Pivot IsLocked="False" HorizontalAlignment="Stretch" Margin="0,0,0,40" VerticalAlignment="Stretch" ManipulationMode="All" IsDoubleTapEnabled="False" IsRightTapEnabled="False">
+                        <Pivot.LeftHeader>
+                            <ToggleButton x:Name="HidePaneButton" VerticalAlignment="Stretch" Width="48" Canvas.ZIndex="100" IsChecked="{Binding ElementName=ImageViewerSplitView, Path=IsPaneOpen, Mode=TwoWay}">
+                                <ToggleButton.Content>
+                                    <SymbolIcon Symbol="ClosePane" RenderTransformOrigin="0.5,0.5" >
+                                        <SymbolIcon.RenderTransform>
+                                            <CompositeTransform Rotation="180"/>
+                                        </SymbolIcon.RenderTransform>
+                                    </SymbolIcon>
+                                </ToggleButton.Content>
+                            </ToggleButton>
+                        </Pivot.LeftHeader>
+                        <PivotItem Header="Tags" Margin="16, 16, 16, 16">
+                            <ScrollViewer VerticalAlignment="Stretch" HorizontalAlignment="Stretch" ZoomMode="Disabled" VerticalScrollBarVisibility="Auto" HorizontalScrollMode="Disabled">
+                                <StackPanel Orientation="Vertical" Height="Auto" VerticalAlignment="Top" HorizontalAlignment="Stretch" Spacing="5">
+
+                                    <TextBlock x:Name="Copyrights" Text="Copyrights" Style="{StaticResource FlyoutPickerTitleTextBlockStyle}" Visibility="Collapsed"/>
+                                    <muxc:ItemsRepeater ItemsSource="{x:Bind CopyrightTags}" ItemTemplate="{StaticResource CopyrightTagsList}">
+                                        <muxc:ItemsRepeater.Layout>
+                                            <controls:WrapLayout VerticalSpacing="8" HorizontalSpacing="8"/>
+                                        </muxc:ItemsRepeater.Layout>
+                                    </muxc:ItemsRepeater>
+
+                                    <TextBlock x:Name="Characters" Text="Characters" Style="{StaticResource FlyoutPickerTitleTextBlockStyle}" Visibility="Collapsed"/>
+                                    <muxc:ItemsRepeater ItemsSource="{x:Bind CharacterTags}" ItemTemplate="{StaticResource CharacterTagsList}">
+                                        <muxc:ItemsRepeater.Layout>
+                                            <controls:WrapLayout VerticalSpacing="8" HorizontalSpacing="8"/>
+                                        </muxc:ItemsRepeater.Layout>
+                                    </muxc:ItemsRepeater>
+
+                                    <TextBlock x:Name="Artists" Text="Artists" Style="{StaticResource FlyoutPickerTitleTextBlockStyle}" Visibility="Collapsed"/>
+                                    <muxc:ItemsRepeater ItemsSource="{x:Bind ArtistTags}" ItemTemplate="{StaticResource ArtistTagsList}">
+                                        <muxc:ItemsRepeater.Layout>
+                                            <controls:WrapLayout VerticalSpacing="8" HorizontalSpacing="8"/>
+                                        </muxc:ItemsRepeater.Layout>
+                                    </muxc:ItemsRepeater>
+
+                                    <TextBlock x:Name="Generals" Text="Tags" Style="{StaticResource FlyoutPickerTitleTextBlockStyle}" Visibility="Collapsed"/>
+                                    <muxc:ItemsRepeater ItemsSource="{x:Bind GeneralTags}" ItemTemplate="{StaticResource GeneralTagsList}">
+                                        <muxc:ItemsRepeater.Layout>
+                                            <controls:WrapLayout VerticalSpacing="8" HorizontalSpacing="8"/>
+                                        </muxc:ItemsRepeater.Layout>
+                                    </muxc:ItemsRepeater>
+
+                                    <TextBlock x:Name="Metas" Text="Meta" Style="{StaticResource FlyoutPickerTitleTextBlockStyle}" Visibility="Collapsed"/>
+                                    <muxc:ItemsRepeater ItemsSource="{x:Bind MetaTags}" ItemTemplate="{StaticResource MetaTagsList}">
+                                        <muxc:ItemsRepeater.Layout>
+                                            <controls:WrapLayout VerticalSpacing="8" HorizontalSpacing="8"/>
+                                        </muxc:ItemsRepeater.Layout>
+                                    </muxc:ItemsRepeater>
+
+                                </StackPanel>
+                            </ScrollViewer>
+                        </PivotItem>
+                        <PivotItem Header="Comments" Margin="16, 16, 16, 16">
+                            <TextBlock Text="Comments Pivot" />
+                        </PivotItem>
+                        <PivotItem Header="Information" Margin="16, 16, 16, 16">
+                            <TextBlock Text="Information Pivot" />
+                        </PivotItem>
+                    </Pivot>
+                    <CommandBar Background="Transparent" DefaultLabelPosition="Bottom" VerticalAlignment="Bottom" IsDynamicOverflowEnabled="False" >
+                        <AppBarToggleButton x:Name="ToggleFavorite" Style="{ThemeResource FavoriteButtonRevealStyle}" IsEnabled="False" />
+                        <AppBarButton Icon="Download" Label="Download" IsEnabled="False" />
+                        <AppBarButton x:Name="Share" Icon="Share" Label="Share" Click="Share_Click" />
+                        <AppBarButton x:Name="Browser" Icon="Globe" Label="Browser" Click="Browser_Click"/>
+                    </CommandBar>
+                </Grid>
+            </SplitView.Pane>
+        </SplitView>
+    </Grid>
+</Page>

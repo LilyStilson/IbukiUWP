@@ -1,0 +1,47 @@
+﻿<Page x:Class="Ibuki.DashboardPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="using:Ibuki"
+    mc:Ignorable="d"
+      
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:animatedvisuals="using:Microsoft.UI.Xaml.Controls.AnimatedVisuals" 
+    
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:animations="using:Microsoft.Toolkit.Uwp.UI.Animations" 
+      
+    Loaded="Page_Loaded">
+
+    <Page.Resources>
+        <ResourceDictionary>
+            <DataTemplate x:Key="BooruImage" x:DataType="local:BooruPost">
+                <Image  
+                    Tag="{x:Bind ID}" 
+                    Source="{x:Bind PreviewImageURL}" 
+                    Stretch="UniformToFill" 
+                    HorizontalAlignment="Center" 
+                    VerticalAlignment="Center" />
+            </DataTemplate>
+        </ResourceDictionary>
+    </Page.Resources>
+
+    <Grid>
+        <!--<TextBlock Style="{StaticResource HeaderTextBlockStyle}" Text="Dashboard Page" VerticalAlignment="Center" HorizontalAlignment="Center"/>-->
+
+        <RefreshContainer x:Name="GridRefreshContainer" RefreshRequested="GridRefreshContainer_RefreshRequested">
+            <controls:AdaptiveGridView x:Name="ImageGrid"
+                StretchContentForSingleRow="True"
+                OneRowModeEnabled="False"
+                ItemHeight="200"
+                DesiredWidth="160"
+                SelectionMode="None"
+                IsItemClickEnabled="True"
+                ItemTemplate="{StaticResource BooruImage}"
+                ItemsSource="{x:Bind local:DashboardPage.BooruCollection}"
+                animations:ItemsReorderAnimation.Duration="00:00:00.3000000" 
+                ItemClick="ImageGrid_ItemClick" />
+        </RefreshContainer>
+    </Grid>
+</Page>

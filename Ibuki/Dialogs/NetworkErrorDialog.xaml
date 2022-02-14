@@ -1,0 +1,19 @@
+﻿<ContentDialog
+    x:Class="Ibuki.Dialogs.NetworkErrorDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Ibuki"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="A network error occured"
+    DefaultButton="Primary"
+    PrimaryButtonText="Retry"
+    SecondaryButtonText="Network settings"
+    CloseButtonText=":c"
+    PrimaryButtonClick="ContentDialog_PrimaryButtonClick">
+
+    <Grid>
+        <TextBlock x:Name="NetworkErrorDialogBody" Text="Text placeholder"/>
+    </Grid>
+</ContentDialog>
