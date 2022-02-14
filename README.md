@@ -6,7 +6,7 @@
 ## What is the difference?
 Unlike all the Booru applications out there where developer decided beforehand which Boorus are available to user, **Ibuki** is highly customizeable. You can yourself add whatever Booru out there to the **Ibuki** and it will display pictures from that Booru and retain full functionality (as long that Booru has a public REST API, of course).
 
-Of course, there will be a Booru configuration presets included with the app. Although, we won't include any NSFW Boorus (like Danbooru or Gelbooru) with iOS version due to Apple's policy.
+Of course, there will be a Booru configuration presets included with the app. As long as Microsoft will allow them to be included.
 
 ---
 ## Contribution
