@@ -30,18 +30,23 @@ namespace Ibuki.Utils {
             return new Uri(resultURL);
         }
 
+        public static string FormatBooruString(string source, Dictionary<string, string> args) {
+            foreach (Match match in Regex.Matches(source, @"{\s*(.*?)\s*}")) {       /// "{MATCH}"
+                string token = match.Value.Replace("{", "").Replace("}", "");           /// "TOKEN"
+                if (match.Value == "{}" || args[token] == "")
+                    source = source
+                        .Replace(match.Value, args[token])
+                        .Remove(source.IndexOf(token) - 2, 1);
+                else
+                    source = source.Replace(match.Value, args[token]);
+            }
+            return source;
+        }
+
         public static Uri FormatBooruUri(Uri baseURI, Dictionary<string, string> args) {
             string resultURL = Uri.UnescapeDataString(baseURI.AbsoluteUri);
 
-            foreach (Match match in Regex.Matches(resultURL, @"{\s*(.*?)\s*}")) {       /// "{MATCH}"
-                string token = match.Value.Replace("{", "").Replace("}", "");           /// "TOKEN"
-                if (match.Value == "{}" || args[token] == "")
-                    resultURL = resultURL
-                        .Replace(match.Value, args[token])
-                        .Remove(resultURL.IndexOf(token) - 2, 1);
-                else
-                    resultURL = resultURL.Replace(match.Value, args[token]);
-            }
+            resultURL = FormatBooruString(resultURL, args);
 
             return new Uri(resultURL);
         }
@@ -65,7 +70,7 @@ namespace Ibuki.Utils {
         /// </summary>
         /// <param name="uri">Uri representation of target URL</param>
         /// <returns><inheritdoc/></returns>
-        public static async Task<string> GetHTML(Uri uri) {
+        public static async Task<string> GET(Uri uri) {
             HttpClient Client = new HttpClient();
 
             HttpResponseMessage Response = await Client.GetAsync(uri);
@@ -104,6 +109,40 @@ namespace Ibuki.Utils {
             HttpResponseMessage Response = await Client.GetAsync(URI);
 
             return await Response.Content.ReadAsStringAsync();
+        }
+
+        public static async Task<HttpStatusCode> POST(string URL, Dictionary<string, string> args) {
+            HttpClient Client = new HttpClient();
+            Uri URI = new Uri(URL);
+
+            FormUrlEncodedContent Content = new FormUrlEncodedContent(args);
+            HttpResponseMessage Response = await Client.PostAsync(URI, Content);
+
+            return Response.StatusCode;
+        }
+        public static async Task<HttpStatusCode> POST(Uri URI, Dictionary<string, string> args) {
+            HttpClient Client = new HttpClient();
+
+            FormUrlEncodedContent Content = new FormUrlEncodedContent(args);
+            HttpResponseMessage Response = await Client.PostAsync(URI, Content);
+
+            return Response.StatusCode;
+        }
+
+        public static async Task<HttpStatusCode> DELETE(string URL) {
+            HttpClient Client = new HttpClient();
+            Uri URI = new Uri(URL);
+
+            HttpResponseMessage Response = await Client.DeleteAsync(URI);
+
+            return Response.StatusCode;
+        }
+        public static async Task<HttpStatusCode> DELETE(Uri URI) {
+            HttpClient Client = new HttpClient();
+
+            HttpResponseMessage Response = await Client.DeleteAsync(URI);
+
+            return Response.StatusCode;
         }
     }
 }

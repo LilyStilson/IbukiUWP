@@ -22,7 +22,12 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
 
+using Ibuki.Classes;
+
 using muxc = Microsoft.UI.Xaml.Controls;
+using Ibuki.Dialogs;
+using Windows.Storage;
+using Windows.UI.Xaml.Media.Imaging;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -77,17 +82,24 @@ namespace Ibuki {
         public Tags PostTags { get; set; }
     }
 
-    //public class AppSettings {
-    //    public int LIMIT { get; set; } = 20;
-    //    public BooruData Booru { get; set; }
+    //public class BooruNavigationViewItem {
+    //    public string Name { get; set; }
+    //    public BitmapImage Icon { get; set; }
     //}
-    
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
+
+
     public sealed partial class MainPage : Page {
+        ApplicationDataContainer LocalSettings = ApplicationData.Current.LocalSettings;
+        StorageFolder LocalFolder = ApplicationData.Current.LocalFolder;
+        public static Settings CurrentSettings { get; set; }
+        public ObservableCollection<muxc.NavigationViewItem> BooruMenuItems { get; set; } = new ObservableCollection<muxc.NavigationViewItem>();
+
+        private readonly List<(string DisplayName, BitmapImage Icon)> BooruLogos = new List<(string DisplayName, BitmapImage Icon)>() {
+            ("Danbooru", new BitmapImage(new Uri("ms-appx:///Assets/BooruLogos/Danbooru.png")))
+        };
         private readonly List<(string Tag, Type Page)> _pages = new List<(string Tag, Type Page)> {
             ("dashboard", typeof(DashboardPage)),
+            ("downloads", typeof(DownloadsPage)),
             ("settings", typeof(SettingsPage)),
             ("viewer", typeof(ImageViewerPage))
         };
@@ -109,7 +121,34 @@ namespace Ibuki {
 
             // Set XAML element as a draggable region.
             Window.Current.SetTitleBar(AppTitleBar);
+
+            //LocalSettings.Values.Clear();
+            if (LocalSettings.Values.Count == 0) {
+                System.Diagnostics.Debug.WriteLine("No settings found. Creating...");
+                CurrentSettings = new Settings();
+                CurrentSettings.Init();
+
+                CurrentSettings.SaveToLocalStorage();
+                //LocalSettings.Values["SETTINGS_JSON"] = JsonConvert.SerializeObject(CurrentSettings);
+                System.Diagnostics.Debug.WriteLine($"Created and stored {LocalSettings.Values.Count} entries. Converting to application class...");
+            } else {
+                CurrentSettings = Settings.LoadFromLocalStorage();//JsonConvert.DeserializeObject<Settings>(LocalSettings.Values["SETTINGS_JSON"] as string);
+            }
+
+            for (int i = 0; i < CurrentSettings.Boorus.Count; i++) {
+                BooruMenuItems.Add(new muxc.NavigationViewItem() {
+                    Content = CurrentSettings.Boorus[i].DisplayName,
+                    Icon = new muxc.ImageIcon() {
+                        Source = BooruLogos.FirstOrDefault(item => item.DisplayName == CurrentSettings.Boorus[i].DisplayName).Icon
+                    },
+                    Tag = "dashboard"
+                });
+            }
+
+            System.Diagnostics.Debug.WriteLine(JsonConvert.SerializeObject(CurrentSettings, Formatting.Indented));
         }
+
+
 
         private void RefreshButton_Click(object sender, RoutedEventArgs e) {
             DashboardPage.RefreshAll();
@@ -134,7 +173,7 @@ namespace Ibuki {
             // If navigation occurs on SelectionChanged, this isn't needed.
             // Because we use ItemInvoked to navigate, we need to call Navigate
             // here to load the home page.
-            NavView_Navigate("dashboard", new EntranceNavigationTransitionInfo());
+            //NavView_Navigate("dashboard", new EntranceNavigationTransitionInfo());
 
             // Add keyboard accelerators for backwards navigation.
             var goBack = new KeyboardAccelerator { Key = VirtualKey.GoBack };
@@ -157,6 +196,7 @@ namespace Ibuki {
                 NavView_Navigate("settings", args.RecommendedNavigationTransitionInfo);
             } else if(args.InvokedItemContainer != null) {
                 var navItemTag = args.InvokedItemContainer.Tag.ToString();
+                CurrentSettings.ActiveBooru = CurrentSettings.Boorus.IndexOf(args.InvokedItem as string);
                 NavView_Navigate(navItemTag, args.RecommendedNavigationTransitionInfo);
             }
         }
@@ -174,10 +214,13 @@ namespace Ibuki {
             }
         }
 
-        private void NavView_Navigate(string navItemTag, NavigationTransitionInfo transitionInfo) {
+        private async void NavView_Navigate(string navItemTag, NavigationTransitionInfo transitionInfo) {
             Type _page = null;
-            if(navItemTag == "settings") {
+            if (navItemTag == "settings") {
                 _page = typeof(SettingsPage);
+            } else if (navItemTag == "login") {
+                BooruLoginDialog dialog = new BooruLoginDialog(CurrentSettings.Boorus[CurrentSettings.ActiveBooru].DisplayName);
+                await dialog.ShowAsync();
             } else {
                 var item = _pages.FirstOrDefault(p => p.Tag.Equals(navItemTag));
                 _page = item.Page;
@@ -227,9 +270,9 @@ namespace Ibuki {
                 //NavView.SelectedItem = (muxc.NavigationViewItem)NavView.BigImage;
                 AppTitleBarHeader.Text = $"ID: {(e.Parameter as Image).Tag}";
             } else if(NavViewContentFrame.SourcePageType != null) {
-                var item = _pages.FirstOrDefault(p => p.Page == e.SourcePageType);
+                //var item = _pages.FirstOrDefault(p => p.Page == e.SourcePageType);
 
-                NavView.SelectedItem = NavView.MenuItems.OfType<muxc.NavigationViewItem>().First(n => n.Tag.Equals(item.Tag));
+                //NavView.SelectedItem = NavView.MenuItems.OfType<muxc.NavigationViewItem>().First(n => n.Tag.Equals(item.Tag));
 
                 AppTitleBarHeader.Text = ((muxc.NavigationViewItem)NavView.SelectedItem)?.Content?.ToString();
             }
@@ -237,6 +280,15 @@ namespace Ibuki {
 
         private void NavViewContentFrame_NavigationFailed(object sender, NavigationFailedEventArgs e) {
             throw new Exception("Failed to load Page " + e.SourcePageType.FullName);
+        }
+
+        private void SearchBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args) {
+            //
+        }
+
+        private void Page_Loaded(object sender, RoutedEventArgs e) {
+            /// hacky shit, but works idk
+            NavView.SelectedItem = BooruMenuItems[0];
         }
     }
 }

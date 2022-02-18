@@ -4,11 +4,45 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Ibuki"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid>
-        <TextBlock Style="{StaticResource HeaderTextBlockStyle}" Text="Settings Page" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+        <Pivot>
+            <PivotItem Header="Main">
+                <StackPanel Orientation="Vertical">
+                    <StackPanel Orientation="Horizontal" Margin="0, 16, 0, 0">
+                        <TextBlock Text="Images per page" Style="{StaticResource FlyoutPickerTitleTextBlockStyle}" Margin="0, 0, 16, 0"/>
+                        <Slider x:Name="ImgLimitSlider" Minimum="20" Maximum="200" Width="288" Value="50" Margin="0, 0, 16, 0"/>
+                        <TextBlock Style="{StaticResource FlyoutPickerTitleTextBlockStyle}"
+                        Text="{x:Bind ImgLimitSlider.Value.ToString(), Mode=OneWay}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0, 16, 0, 0">
+                        <Button Content="Clear settings" Width="200" Style="{StaticResource ButtonRevealStyle}">
+                            <Button.Flyout>
+                                <Flyout Placement="Right" LightDismissOverlayMode="On" >
+                                    <StackPanel>
+                                        <controls:DropShadowPanel Color="Red">
+                                            <TextBlock Style="{ThemeResource BaseTextBlockStyle}" Text="All settings will be removed. Do you want to continue?" Margin="0,0,0,12" Foreground="Red"/>
+                                        </controls:DropShadowPanel>
+                                        <Button x:Name="ClearSettingsButton" Click="ClearSettingsButton_Click" Content="Yes, clear settings" Style="{StaticResource ButtonRevealStyle}"/>
+                                    </StackPanel>
+                                </Flyout>
+                            </Button.Flyout>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </PivotItem>
+            <PivotItem Header="Booru">
+                <Grid />
+            </PivotItem>
+            <PivotItem Header="Display">
+                <Grid />
+            </PivotItem>
+            <PivotItem Header="About">
+                <Grid />
+            </PivotItem>
+        </Pivot>
     </Grid>
 </Page>

@@ -6,7 +6,9 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
-    mc:Ignorable="d">
+    xmlns:classes="using:Ibuki.Classes"
+    mc:Ignorable="d"
+    Loaded="Page_Loaded">
 
     <Page.Background>
         <AcrylicBrush TintColor="#CC000000" FallbackColor="#CC000000" TintOpacity="0" BackgroundSource="HostBackdrop"/>
@@ -41,7 +43,7 @@
 
         <!-- Search Panel -->
         <StackPanel Height="48" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0, 0, 192, 0" Canvas.ZIndex="9999">
-            <AutoSuggestBox Width="256" Height="32" VerticalAlignment="Center" Margin="0, 0, 8, 0" QueryIcon="Find" PlaceholderText="Search" />
+            <AutoSuggestBox x:Name="SearchBox" Width="256" Height="32" VerticalAlignment="Center" Margin="0, 0, 8, 0" QueryIcon="Find" PlaceholderText="Search" QuerySubmitted="SearchBox_QuerySubmitted" />
             <Button x:Name="RefreshButton" Height="32" Width="40" Click="RefreshButton_Click">
                 <!--<muxc:AnimatedIcon x:Name="SearchAnimatedIcon">
                     <muxc:AnimatedIcon.Source>
@@ -66,24 +68,21 @@
             <ProgressBar x:Name="MainProgress" x:FieldModifier="public" Height="5" VerticalAlignment="Top" IsIndeterminate="True" ShowError="False" ShowPaused="False" Margin="0,0,0,0" Visibility="Collapsed" />
         </Grid>
 
-        <muxc:NavigationView x:Name="NavView" IsSettingsVisible="False" IsTitleBarAutoPaddingEnabled="False" IsBackEnabled="True" PaneDisplayMode="LeftMinimal" AlwaysShowHeader="False"
-            ItemInvoked="NavView_ItemInvoked" BackRequested="NavView_BackRequested" SelectionChanged="NavView_SelectionChanged" Loaded="NavView_Loaded">
-            <muxc:NavigationView.MenuItems>
-                <!--<muxc:NavigationViewItem x:Name="HomeItem" Icon="Home" Content="Dashboard" SelectsOnInvoked="False"/>-->
+        <muxc:NavigationView x:Name="NavView" IsSettingsVisible="False" IsTitleBarAutoPaddingEnabled="False" 
+                             IsBackEnabled="True" PaneDisplayMode="LeftMinimal" AlwaysShowHeader="False"
+                             ItemInvoked="NavView_ItemInvoked" BackRequested="NavView_BackRequested" 
+                             SelectionChanged="NavView_SelectionChanged" Loaded="NavView_Loaded"
+                             MenuItemsSource="{x:Bind BooruMenuItems, Mode=OneWay}">
+            <!--<muxc:NavigationView.MenuItems>
                 <muxc:NavigationViewItemSeparator />
                 <muxc:NavigationViewItemHeader Content="Booru" />
-                <muxc:NavigationViewItem Icon="Globe" Content="Danbooru" IsSelected="True" Tag="dashboard"/>
+                <muxc:NavigationViewItem Icon="Globe" Content="Danbooru" IsSelected="True" Tag="dashboard" />
                 <muxc:NavigationViewItem Icon="Globe" Content="Safebooru" Tag="dashboard" />
                 <muxc:NavigationViewItem Icon="Globe" Content="e621" Tag="dashboard" />
                 <muxc:NavigationViewItem Icon="Globe" Content="Derpibooru" Tag="dashboard" />
-                <!--<muxc:NavigationViewItem x:Name="BooruItem" Icon="Globe" Content="Boorus">
-                    <muxc:NavigationViewItem.MenuItems>
-                        
-                    </muxc:NavigationViewItem.MenuItems>
-                </muxc:NavigationViewItem>-->
-
-            </muxc:NavigationView.MenuItems>
+            </muxc:NavigationView.MenuItems>-->
             <muxc:NavigationView.FooterMenuItems>
+                <muxc:NavigationViewItem x:Name="DownloadsItem" Icon="Download" Content="Downloads" SelectsOnInvoked="False" Tag="downloads"/>
                 <muxc:NavigationViewItem x:Name="LoginItem" Icon="Contact" Content="Login" SelectsOnInvoked="False" Tag="login"/>
                 <muxc:NavigationViewItem x:Name="SettingsItem" Icon="Setting" Content="Settings" Tag="settings" />
             </muxc:NavigationView.FooterMenuItems>

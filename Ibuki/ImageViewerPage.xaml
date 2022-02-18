@@ -8,7 +8,9 @@
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:converters="using:Ibuki.Classes.Converters"
-    mc:Ignorable="d">
+    xmlns:classes="using:Ibuki.Classes"
+    mc:Ignorable="d"
+    Loaded="Page_Loaded">
 
     <Page.Resources>
         <ResourceDictionary>
@@ -59,7 +61,7 @@
     </Page.Resources>
     
     <Grid>
-        <SplitView x:Name="ImageViewerSplitView" PanePlacement="Right" IsPaneOpen="True" ScrollViewer.VerticalScrollBarVisibility="Auto" DisplayMode="Inline" OpenPaneLength="384">
+        <SplitView x:Name="ImageViewerSplitView" PanePlacement="Right" IsPaneOpen="True" ScrollViewer.VerticalScrollBarVisibility="Auto" DisplayMode="Inline" OpenPaneLength="384" Style="{StaticResource SplitViewStyleFixed}">
             <SplitView.PaneBackground>
                 <AcrylicBrush TintColor="#CC000000" FallbackColor="Black" TintOpacity="0.5"/>
             </SplitView.PaneBackground>
@@ -142,9 +144,9 @@
                         </PivotItem>
                     </Pivot>
                     <CommandBar Background="Transparent" DefaultLabelPosition="Bottom" VerticalAlignment="Bottom" IsDynamicOverflowEnabled="False" >
-                        <AppBarToggleButton x:Name="ToggleFavorite" Style="{ThemeResource FavoriteButtonRevealStyle}" IsEnabled="False" />
-                        <AppBarButton Icon="Download" Label="Download" IsEnabled="False" />
-                        <AppBarButton x:Name="Share" Icon="Share" Label="Share" Click="Share_Click" />
+                        <classes:LockableAppBarToggleButton x:Name="ToggleFavorite" Style="{ThemeResource FavoriteButtonRevealStyle}" LockToggle="True" Click="ToggleFavorite_Click" />
+                        <AppBarButton x:Name="Download" Icon="Download" Label="Download" IsEnabled="False" Click="Download_Click" />
+                        <AppBarButton x:Name="Share" Icon="Share" Label="Share" Click="Share_Click" /> 
                         <AppBarButton x:Name="Browser" Icon="Globe" Label="Browser" Click="Browser_Click"/>
                     </CommandBar>
                 </Grid>

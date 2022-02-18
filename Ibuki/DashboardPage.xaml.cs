@@ -38,19 +38,19 @@ namespace Ibuki {
         }
 
         public async Task<IEnumerable<BooruPost>> CreatePosts(int limit = 20, int page = 1, string search = "") {
-#if DEBUG
-            System.Diagnostics.Debug.WriteLine($"Trying to get {Helpers.AppendArgsToUri(new Uri(_booru.BaseURI, _booru.postEndpoints.GET_Posts), $"limit={limit}", $"page={page}", search != "" ? $"tags={search}" : "").AbsoluteUri}...");
-#endif
             List<BooruPost> result = new List<BooruPost>();
 
-            //JObject[] BooruPosts = JsonConvert.DeserializeObject<JObject[]>(await Helpers.GetHTML(Helpers.AppendArgsToUri(new Uri(_booru.BaseURI, _booru.postEndpoints.GET_Posts), $"limit={limit}", $"page={page}", search != "" ? $"tags={search}" : "").AbsoluteUri));
+            PasswordCredentials credentials = MainPage.CurrentSettings.GetActiveCredentialsForActiveBooru();
+            string AuthString = "";
 
-            JObject[] BooruPosts = JsonConvert.DeserializeObject<JObject[]>(await Helpers.GetHTML(Helpers.FormatBooruUri(
+            if (credentials != null) {
+                AuthString = MainPage.CurrentSettings.GetFormatedCredentialsForActiveBooru();
+            }
+
+            JObject[] BooruPosts = JsonConvert.DeserializeObject<JObject[]>(await Helpers.GET(Helpers.FormatBooruUri(
                 new Uri(_booru.BaseURI, _booru.postEndpoints.GET_Posts),
-                new Dictionary<string, string> { { "LIMIT", $"{limit}" }, { "TAGS", $"{search}" }, { "PAGE", $"{page}" }, { "AUTH", "" } }
+                new Dictionary<string, string> { { "LIMIT", $"{limit}" }, { "TAGS", search }, { "PAGE", $"{page}" }, { "AUTH", AuthString } }
             )));
-    
-            //$"limit={limit}", $"page={page}", search != "" ? $"tags={search}" : "").AbsoluteUri));
 
             foreach (JObject post in BooruPosts) {
                 if(post.SelectToken(_booru.post.ID) != null && post.SelectToken(_booru.post.PreviewImageURL) != null && post.SelectToken(_booru.post.LargeImageURL) != null) {
@@ -87,9 +87,9 @@ namespace Ibuki {
         public static bool Initialized { get; set; } = false;
         public Image clickedImage;
 
-        public static BooruData booru { get; set; } = JsonConvert.DeserializeObject<BooruData>(BooruPresets.Danbooru);
+        public static BooruData booru { get; set; } //= JsonConvert.DeserializeObject<BooruData>(BooruPresets.Danbooru().GetAwaiter().GetResult());
 
-        public static IncrementalLoadingCollectionEx<BooruSource, BooruPost> BooruCollection = new IncrementalLoadingCollectionEx<BooruSource, BooruPost>(new BooruSource(booru), 20,
+        public static IncrementalLoadingCollectionEx<BooruSource, BooruPost> BooruCollection/* = new IncrementalLoadingCollectionEx<BooruSource, BooruPost>(new BooruSource(booru), 20,
             onStartLoading: () => {
 
             },
@@ -97,17 +97,17 @@ namespace Ibuki {
                 System.Diagnostics.Debug.WriteLine($"Finished loading {BooruCollection.Count} items from {BooruCollection.CurrentPageIndex - 1}");
                 Initialized = true;
             },
-            onError: async (Exception e) => {
-                if(e.GetType() == typeof(System.Net.Http.HttpRequestException)) {
-                    NetworkErrorDialog dlg = new NetworkErrorDialog(e.Message + '\n' + e.StackTrace);
-                    if(await dlg.ShowAsync() == ContentDialogResult.Primary) {
+            onError: async (Exception ex) => {
+                if (ex.GetType() == typeof(System.Net.Http.HttpRequestException)) {
+                    NetworkErrorDialog dlg = new NetworkErrorDialog(ex.Message + '\n' + ex.StackTrace);
+                    if (await dlg.ShowAsync() == ContentDialogResult.Primary) {
                         await BooruCollection.RefreshAsync(1);
-                    }
+}
                 } else {
-                    UnhadledExceptionDialog dlg = new UnhadledExceptionDialog(e.GetType().FullName + '\n' + e.Message + '\n' + e.StackTrace);
-                }
+                    UnhadledExceptionDialog dlg = new UnhadledExceptionDialog(ex.GetType().FullName + '\n' + ex.Message + '\n' + ex.StackTrace);
+}
             }
-        );
+        )*/;
 
         public static void RefreshAll() {
             BooruCollection.RefreshAsync();
@@ -118,10 +118,6 @@ namespace Ibuki {
             NavigationCacheMode = NavigationCacheMode.Enabled;
         }
 
-        private void Page_Loaded(object sender, RoutedEventArgs e) {
-            //if(BooruCollection.Count == 0 && Initialized == false) RefreshAll();
-        }
-
         protected override void OnNavigatedTo(NavigationEventArgs e) {
             base.OnNavigatedTo(e);
 
@@ -130,10 +126,6 @@ namespace Ibuki {
             if(anim != null && clickedImage != null) {
                 anim.TryStart(clickedImage);
             }
-#if DEBUG
-            if(e.SourcePageType != null && BooruCollection.Count == 0)
-                System.Diagnostics.Debug.WriteLine("Collection is empty, needs refresh!!!");
-#endif       
         }
 
         protected override void OnNavigatingFrom(NavigatingCancelEventArgs e) {
@@ -142,10 +134,6 @@ namespace Ibuki {
                 var anim = ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("ToBigImage", clickedImage);
                 anim.Configuration = new DirectConnectedAnimationConfiguration();
             }
-            // You don't need to explicitly set the Configuration property because
-            // the recommended Gravity configuration is default.
-            // For custom animation, use:
-            // animation.Configuration = new BasicConnectedAnimationConfiguration();
         }
 
         private void GridRefreshContainer_RefreshRequested(RefreshContainer sender, RefreshRequestedEventArgs args) {
@@ -153,13 +141,41 @@ namespace Ibuki {
         }
 
         private void ImageGrid_ItemClick(object sender, ItemClickEventArgs e) {
-            //System.Diagnostics.Debug.WriteLine(e.ClickedItem.GetType().ToString());
-            //System.Diagnostics.Debug.WriteLine((e.ClickedItem as Image).Source);
-
             clickedImage = (ImageGrid.ContainerFromItem(e.ClickedItem) as GridViewItem).FindDescendant<Image>();
             ImageViewerPage.CurrentPost = BooruCollection.FirstOrDefault(post => post.ID.ToString() == clickedImage.Tag.ToString());
 
             Frame.Navigate(typeof(ImageViewerPage), clickedImage, new SuppressNavigationTransitionInfo());
+        }
+
+        private void Page_Loaded(object sender, RoutedEventArgs e) {
+            if (booru == null)
+                if (MainPage.CurrentSettings.Boorus.Count > 0)
+                    booru = MainPage.CurrentSettings.Boorus[MainPage.CurrentSettings.ActiveBooru];
+                    
+                //JsonConvert.DeserializeObject<BooruData>(await BooruPresets.Danbooru());
+            if (BooruCollection == null) {
+                BooruCollection = new IncrementalLoadingCollectionEx<BooruSource, BooruPost>(new BooruSource(booru), 20,
+                    onStartLoading: () => {
+
+                    },
+                    onEndLoading: () => {
+                        System.Diagnostics.Debug.WriteLine($"Finished loading {BooruCollection.Count} items from {BooruCollection.CurrentPageIndex - 1}");
+                        Initialized = true;
+                    },
+                    onError: async (Exception ex) => {
+                        if (ex.GetType() == typeof(System.Net.Http.HttpRequestException)) {
+                            NetworkErrorDialog dlg = new NetworkErrorDialog(ex.Message + '\n' + ex.StackTrace);
+                            if (await dlg.ShowAsync() == ContentDialogResult.Primary) {
+                                await BooruCollection.RefreshAsync(1);
+                            }
+                        } else {
+                            UnhadledExceptionDialog dlg = new UnhadledExceptionDialog(ex.GetType().FullName + '\n' + ex.Message + '\n' + ex.StackTrace);
+                        }
+                    }
+                );
+
+                ImageGrid.ItemsSource = BooruCollection;
+            }
         }
     }
 }

@@ -1,13 +1,19 @@
-﻿using Ibuki.Dialogs;
+﻿using Ibuki.Classes;
+using Ibuki.Dialogs;
 using Ibuki.Utils;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Networking.BackgroundTransfer;
+using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -40,6 +46,8 @@ namespace Ibuki {
             NavigationCacheMode = NavigationCacheMode.Required;
 
             ImageLoaded = false;
+
+            ToggleFavorite.IsChecked = ToggleFavorite.IsEnabled = false;
 
             ZoomView.ChangeView(0, 0, 1, false);
         }
@@ -127,7 +135,68 @@ namespace Ibuki {
 
         private async void Browser_Click(object sender, RoutedEventArgs e) {
             /// TODO: Fix Danbooru preset!!! 
-            await Windows.System.Launcher.LaunchUriAsync(Helpers.FormatBooruUri(new Uri(DashboardPage.booru.BaseURI, DashboardPage.booru.postEndpoints.GET_Post), new Dictionary<string, string> { { "ID", $"{CurrentPost.ID}" } }));
+            await Windows.System.Launcher.LaunchUriAsync(Helpers.FormatBooruUri(new Uri(DashboardPage.booru.BaseURI, DashboardPage.booru.postEndpoints.GET_Post.Replace(".json", "")), new Dictionary<string, string> { { "ID", $"{CurrentPost.ID}" } }));
+        }
+
+        private async void Download_Click(object sender, RoutedEventArgs e) {
+            try {
+                Uri source = new Uri(CurrentPost.LargeImageURL);
+
+                StorageFile destinationFile = await KnownFolders.PicturesLibrary.CreateFileAsync(CurrentPost.ID.ToString(), CreationCollisionOption.ReplaceExisting);
+
+                BackgroundDownloader downloader = new BackgroundDownloader();
+                DownloadOperation download = downloader.CreateDownload(source, destinationFile);
+
+                /// Attach progress and completion handlers.
+                HandleDownloadAsync(download, true);
+            } catch (Exception ex) {
+                System.Diagnostics.Debug.WriteLine("Download Error: ", ex.Message);
+            }
+        }
+
+        private void HandleDownloadAsync(DownloadOperation download, bool v) {
+            //download.
+        }
+
+        private async void ToggleFavorite_Click(object sender, RoutedEventArgs e) {
+            if (ToggleFavorite.IsEnabled) {
+                Classes.PasswordCredentials User = MainPage.CurrentSettings.GetActiveCredentialsForActiveBooru();
+                PasswordCredentials credentials = MainPage.CurrentSettings.GetActiveCredentialsForActiveBooru();
+                string AuthString = "";
+
+                if (credentials != null) {
+                    AuthString = MainPage.CurrentSettings.GetFormatedCredentialsForActiveBooru();
+                }
+
+                if (ToggleFavorite.IsChecked == true) {     /// remove from favorites
+                    Uri postUri = new Uri(MainPage.CurrentSettings.GetActiveBooru().BaseURI,
+                        Helpers.FormatBooruString(MainPage.CurrentSettings.GetActiveBooru().favoritesEndpoints.DELETE_RemoveFavoriteForUser, new Dictionary<string, string>
+                            { { "POST_ID", $"{CurrentPost.ID}" }, { "AUTH", AuthString } }));
+                    if (await Helpers.DELETE(postUri) == HttpStatusCode.NoContent) {
+                        ToggleFavorite.IsChecked = false;
+                    }
+                } else {    /// add to favorites
+                    Uri postUri = new Uri(MainPage.CurrentSettings.GetActiveBooru().BaseURI,
+                        Helpers.FormatBooruString(MainPage.CurrentSettings.GetActiveBooru().favoritesEndpoints.POST_CreateFavoriteForUser, new Dictionary<string, string> 
+                            { { "POST_ID", $"{CurrentPost.ID}" }, { "AUTH", AuthString } }));
+                    if (await Helpers.POST(postUri, new Dictionary<string, string>()) == HttpStatusCode.Created) {
+                        ToggleFavorite.IsChecked = true;
+                    }
+                }
+            }
+
+        }
+
+        private async void Page_Loaded(object sender, RoutedEventArgs e) {
+            Classes.PasswordCredentials User = MainPage.CurrentSettings.GetActiveCredentialsForActiveBooru();
+            if (User != null) {
+                JToken favorite = JsonConvert.DeserializeObject<JToken>(await Helpers.GET(Helpers.FormatBooruUri(
+                    new Uri(MainPage.CurrentSettings.GetActiveBooru().BaseURI, MainPage.CurrentSettings.GetActiveBooru().favoritesEndpoints.GET_IsFavoriteForUser),
+                    new Dictionary<string, string> { { "POST_ID", $"{CurrentPost.ID}" }, { "ID", $"{User.ID}" } }
+                )));
+                ToggleFavorite.IsChecked = favorite.HasValues;
+                ToggleFavorite.IsEnabled = true;
+            }
         }
     }
 }

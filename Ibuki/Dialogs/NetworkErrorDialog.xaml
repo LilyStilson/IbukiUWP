@@ -13,7 +13,7 @@
     CloseButtonText=":c"
     PrimaryButtonClick="ContentDialog_PrimaryButtonClick">
 
-    <Grid>
+    <Grid> 
         <TextBlock x:Name="NetworkErrorDialogBody" Text="Text placeholder"/>
     </Grid>
 </ContentDialog>

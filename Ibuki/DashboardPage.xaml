@@ -11,7 +11,7 @@
     
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:animations="using:Microsoft.Toolkit.Uwp.UI.Animations" 
-      
+    
     Loaded="Page_Loaded">
 
     <Page.Resources>

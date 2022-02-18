@@ -1,0 +1,34 @@
+﻿<ContentDialog
+    x:Class="Ibuki.Dialogs.BooruLoginDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Ibuki.Dialogs"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:converters="using:Ibuki.Classes.Converters"
+    mc:Ignorable="d"
+    PrimaryButtonText="Sign in"
+    CloseButtonText="Cancel"
+    DefaultButton="Primary"
+    PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
+    Closing="ContentDialog_Closing">
+
+    <ContentDialog.Resources>
+        <ResourceDictionary>
+            <converters:BooleanNegationConverter x:Name="BooleanNegationConverter" />
+            <converters:BooleanToVisibilityConverter x:Name="BooleanToVisibilityConverter" />
+        </ResourceDictionary>
+    </ContentDialog.Resources>
+
+    <Grid MinWidth="540">
+        <StackPanel Orientation="Vertical">
+            <TextBlock x:Name="DialogTitle" Text="Sign in {BOORU}" Style="{StaticResource TitleTextBlockStyle}" Margin="0,0,0,16"/>
+            <TextBox x:Name="Login" Header="Login" PlaceholderText="Login" />
+            <CheckBox x:Name="UseAPIKey" Content="Sign with API Key" IsChecked="False" />
+            <TextBox x:Name="Password" Visibility="{Binding ElementName=UseAPIKey, Path=IsChecked, Converter={StaticResource BooleanNegationConverter}}" Header="Password" PlaceholderText="Password" />
+            <TextBox x:Name="APIKey" Visibility="{Binding ElementName=UseAPIKey, Path=IsChecked}" Header="API Key" PlaceholderText="API Key" />
+            <TextBlock x:Name="StatusText" Text="Status" Margin="0,4,0,0" />
+            <ProgressBar x:Name="Progress" IsIndeterminate="True" IsEnabled="False" Margin="0,16,0,0" Visibility="{Binding ElementName=Progress, Path=IsEnabled, Converter={StaticResource BooleanToVisibilityConverter}}" />
+        </StackPanel>
+    </Grid>
+</ContentDialog>
